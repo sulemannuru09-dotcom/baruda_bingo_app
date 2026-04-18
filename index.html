@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baruda Bingo Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Header Section */
+        .header {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: #16213e;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #0f3460;
+        }
+        .stat-label { font-size: 10px; color: #999; }
+        .stat-value { font-size: 16px; font-weight: bold; color: #e94560; }
+
+        /* Grid Section */
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .number-btn {
+            background-color: #e94560;
+            border: none;
+            color: white;
+            padding: 12px 0;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .number-btn:active {
+            background-color: #0f3460;
+            transform: scale(0.9);
+        }
+
+        /* Bottom Menu */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #16213e;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 2px solid #0f3460;
+        }
+        .menu-item { text-align: center; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="stat-box">
+            <div class="stat-label">Main Wallet</div>
+            <div class="stat-value">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Stake</div>
+            <div class="stat-value">10</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Timer</div>
+            <div id="timer" class="stat-value">60s</div>
+        </div>
+    </div>
+
+    <div class="bingo-grid" id="grid">
+        </div>
+
+    <div style="height: 80px;"></div> <div class="footer">
+        <div class="menu-item">🎮 Game</div>
+        <div class="menu-item">🕒 History</div>
+        <div class="menu-item">💳 Wallet</div>
+        <div class="menu-item">👤 Profile</div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // ሙሉ ስክሪን እንዲሆን
+
+        // 1. ከ1 እስከ 99 ቁጥሮችን መፍጠር
+        for (let i = 1; i <= 99; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'number-btn';
+            btn.innerText = i;
+            btn.onclick = () => selectNumber(i);
+            grid.appendChild(btn);
+        }
+
+        // 2. ቁጥር ሲመረጥ የሚሆን ነገር
+        function selectNumber(num) {
+            tg.showConfirm("ቁጥር " + num + " መምረጥዎን እርግጠኛ ነዎት?", (confirmed) => {
+                if(confirmed) {
+                    tg.sendData("Selected:" + num); // ለቦቱ ዳታ መላክ
+                    tg.close(); // አፑን መዝጋት
+                }
+            });
+        }
+
+        // 3. ታይመር (Timer)
+        let timeLeft = 60;
+        setInterval(() => {
+            if(timeLeft > 0) {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft + "s";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
