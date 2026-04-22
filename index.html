@@ -2,135 +2,123 @@
 <html lang="am">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baruda Bingo Mini App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Baruda Bingo Bot</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a2e;
-            color: white;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        /* Header Section */
-        .header {
-            width: 100%;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .stat-box {
-            background: #16213e;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #0f3460;
-        }
-        .stat-label { font-size: 10px; color: #999; }
-        .stat-value { font-size: 16px; font-weight: bold; color: #e94560; }
+        /* ከፎቶው ጋር ተመሳሳይ የሆነ ጥቁር ሰማያዊ ዳራ */
+        body { background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; }
+        
+        .header-box { display: flex; justify-content: space-between; padding: 10px; margin-bottom: 10px; }
+        .stat-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 15px; }
+        .stat-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 5px; font-size: 12px; }
 
-        /* Grid Section */
-        .bingo-grid {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 5px;
-            width: 100%;
-            max-width: 400px;
+        /* 1-200 ቁጥር መምረጫ ግሪድ */
+        .grid { 
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; 
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;
+            max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.2);
         }
-        .number-btn {
-            background-color: #e94560;
-            border: none;
-            color: white;
-            padding: 12px 0;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .number-btn:active {
-            background-color: #0f3460;
-            transform: scale(0.9);
-        }
+        .n-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px 0; border-radius: 4px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        
+        /* የተነካ ቁጥር ቀይ እንዲሆን */
+        .n-btn.selected { background: #e94560 !important; border-color: #ff4d4d; }
 
-        /* Bottom Menu */
-        .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: #16213e;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-top: 2px solid #0f3460;
-        }
-        .menu-item { text-align: center; font-size: 12px; color: #999; }
+        /* ካርቴላው ከታች እንዲመጣ */
+        #card-section { display: none; margin-top: 20px; animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        table { width: 100%; max-width: 380px; margin: 0 auto; border-collapse: separate; border-spacing: 3px; background: rgba(255,255,255,0.9); border-radius: 8px; padding: 5px; }
+        th { background: #e94560; color: white; padding: 10px; border-radius: 4px; }
+        td { background: white; color: #333; height: 50px; font-size: 22px; font-weight: bold; border-radius: 4px; width: 20%; }
+        .free { background: #4ee44e !important; color: white !important; font-size: 12px !important; }
+
+        .footer-menu { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a2e; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="stat-box">
-            <div class="stat-label">Main Wallet</div>
-            <div class="stat-value">0</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Stake</div>
-            <div class="stat-value">10</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-label">Timer</div>
-            <div id="timer" class="stat-value">60s</div>
-        </div>
+    <div class="header-box">
+        <button style="background:none; border:1px solid #fff; color:#fff; border-radius:5px; padding:5px 15px;">Back</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #fff; color:#fff; border-radius:5px; padding:5px 15px;">Refresh</button>
     </div>
 
-    <div class="bingo-grid" id="grid">
-        </div>
+    <div class="stat-bar">
+        <div class="stat-item">Main Wallet<br><b>0</b></div>
+        <div class="stat-item">Play Wallet<br><b>0</b></div>
+        <div class="stat-item">Stake<br><b>10</b></div>
+    </div>
 
-    <div style="height: 80px;"></div> <div class="footer">
-        <div class="menu-item">🎮 Game</div>
-        <div class="menu-item">🕒 History</div>
-        <div class="menu-item">💳 Wallet</div>
-        <div class="menu-item">👤 Profile</div>
+    <p>ካርቴላ ይምረጡ (1-200)</p>
+    <div class="grid" id="main-grid"></div>
+
+    <div id="card-section">
+        <h3 id="card-title" style="color: #4ee44e;"></h3>
+        <table>
+            <thead><tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr></thead>
+            <tbody id="card-body"></tbody>
+        </table>
+        <br><br><br> </div>
+
+    <div class="footer-menu">
+        <div>🎮<br>Game</div>
+        <div>🕒<br>History</div>
+        <div>👛<br>Wallet</div>
+        <div>👤<br>Profile</div>
     </div>
 
     <script>
-        const grid = document.getElementById('grid');
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // ሙሉ ስክሪን እንዲሆን
+        const grid = document.getElementById('main-grid');
+        let lastSelected = null;
 
-        // 1. ከ1 እስከ 99 ቁጥሮችን መፍጠር
-        for (let i = 1; i <= 99; i++) {
+        for (let i = 1; i <= 200; i++) {
             const btn = document.createElement('button');
-            btn.className = 'number-btn';
+            btn.className = 'n-btn';
             btn.innerText = i;
-            btn.onclick = () => selectNumber(i);
+            btn.onclick = function() {
+                // የቀድሞውን ቀይ ከለር ማጥፋት
+                if(lastSelected) lastSelected.classList.remove('selected');
+                // አዲሱን ቀይ ማድረግ
+                btn.classList.add('selected');
+                lastSelected = btn;
+                
+                showBingoCard(i);
+            };
             grid.appendChild(btn);
         }
 
-        // 2. ቁጥር ሲመረጥ የሚሆን ነገር
-        function selectNumber(num) {
-            tg.showConfirm("ቁጥር " + num + " መምረጥዎን እርግጠኛ ነዎት?", (confirmed) => {
-                if(confirmed) {
-                    tg.sendData("Selected:" + num); // ለቦቱ ዳታ መላክ
-                    tg.close(); // አፑን መዝጋት
+        function showBingoCard(n) {
+            document.getElementById('card-section').style.display = 'block';
+            document.getElementById('card-title').innerText = "የተመረጠ ካርቴላ № " + n;
+            
+            const tbody = document.getElementById('card-body');
+            tbody.innerHTML = "";
+            let cols = [[],[],[],[],[]];
+            let rgs = [,,,,];
+            
+            for(let i=0; i<5; i++){
+                while(cols[i].length < 5){
+                    let r = Math.floor(Math.random()*(rgs[i]-rgs[i]+1))+rgs[i];
+                    if(!cols[i].includes(r)) cols[i].push(r);
                 }
-            });
-        }
-
-        // 3. ታይመር (Timer)
-        let timeLeft = 60;
-        setInterval(() => {
-            if(timeLeft > 0) {
-                timeLeft--;
-                document.getElementById('timer').innerText = timeLeft + "s";
             }
-        }, 1000);
+
+            for(let r=0; r<5; r++){
+                let tr = document.createElement('tr');
+                for(let c=0; c<5; c++){
+                    let td = document.createElement('td');
+                    if(r===2 && c===2){
+                        td.innerText = "FREE";
+                        td.className = "free";
+                    } else {
+                        td.innerText = cols[c][r];
+                    }
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+            // ካርቴላው ሲመጣ በራሱ ወደ ታች ወርዶ እንዲያሳይ
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
     </script>
 </body>
 </html>
